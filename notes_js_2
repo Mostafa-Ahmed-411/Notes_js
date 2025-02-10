@@ -1,0 +1,334 @@
+/* -------------------------------------------------------------------------- */
+/*                                  call back                                 */
+/* -------------------------------------------------------------------------- */
+//======= call back 
+// // function call function (as an argument in the function)
+// function one(two){
+//     console.log("function one");
+//     two()
+// }
+// function two(){
+//     console.log("function two");
+// }
+// one(two)
+// /* -------------------------------------------------------------------------- */
+
+// =========== call back hell (pyramid of Doom) 
+// // many functions call functions (as an argument in the function)
+// // this become more diffeuclt to undersatnd code like this
+
+// function one(callBack){ 
+//     console.log("function one");
+//     callBack()
+// }
+// function two(callBack){
+//     console.log("function two");
+//     callBack()
+// }
+// function three(callBack){
+//     console.log("function three");
+//     callBack()
+// }
+// function four(callBack){
+//     console.log("function four");
+// }
+// // can call by  (arrow function)
+
+// one(()=>{
+//         two(()=>{
+//                 three(()=>{
+//             four()
+//         })
+//     })
+// })
+
+// // can call by  (anounemous funcion)
+
+// one(function (callBack){
+//     two( function (callBack){
+//         three (function (callBack){
+//                 four()
+//         })
+//     })
+// })
+
+/* ------------------ we use promise to avoid callBack Hell ----------------- */
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* 
+=== promise status
+- pending
+- fulfilled (resolve) 
+- rejected
+*/
+/* note order of output */
+
+let  myPromise_1 = new Promise((resolve , reject)=>{
+    let connection  = false 
+    if(connection){
+        resolve("connection Started--1")
+    }else{
+        reject("connection failed--1")
+    }
+})
+.then(
+    (resolveValue)=> console.log("good--1 : " + resolveValue),
+    (rejectedValue)=> console.log("bad--1 : " + rejectedValue)          //------------- 3
+)
+console.log(myPromise_1);                                              //------------- 1      
+/* -------------------------------------------------------------------------- */
+let  myPromise_2 = new Promise((resolve , reject)=>{
+    let connection  = true 
+    if(connection){
+        resolve("connection Started--2")
+    }else{
+        reject("connection failed--2")
+    }
+})
+myPromise_2.then(
+    (resolveValue)=> console.log("good--2 : " + resolveValue),          //------------- 4 
+    (rejectedValue)=> console.log("bad--2 : " + rejectedValue)
+)
+console.log(myPromise_2);                                              //------------- 2
+/* -------------------------------------------------------------------------- */
+
+/* note this output */
+
+let  myPromise_3 = new Promise((resolve , reject)=>{
+    let days  = ["one","two","three","four"]
+    // if(days.length === 100)  // case false
+    if(days.length === 4)  // case true
+    {
+        resolve(days)
+    }else{
+        reject("errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
+    }
+})
+.then(
+    (resolveValue)=> {
+        console.log("good--1 : " + resolveValue)
+        return resolveValue
+    }
+)
+.then(
+    (resolveValue)=> {
+        console.log("good--2 : " + resolveValue)
+        return resolveValue
+    },
+    (rejectedValue)=> {
+        console.log("bad--2 : " + rejectedValue)
+        return rejectedValue
+    }
+)
+.then(
+    (whatReturned)=> {
+        console.log("print what Returned  which resolve or rejected  |::|  " + whatReturned)
+    }
+)
+.catch((err)=> console.log("print what in reject  " + err));
+
+/* -------------------------------------------------------------------------- */
+/*                               Promise and XHR                              */
+/* -------------------------------------------------------------------------- */
+
+//======= if we use "return new Promise" we must use "then"
+
+function data(url){
+    return new Promise( function( resolve , reject){
+    let myRequest = new XMLHttpRequest();
+    myRequest.open("GET" , url )
+    myRequest.send()
+    let res = []
+    myRequest.addEventListener("load",function(){ 
+
+    if(myRequest.readyState === 4 && 
+    myRequest.status === 200){
+        resolve(JSON.parse(myRequest.response))
+    }else{
+        reject("NO Data Found")
+    }
+    })
+    })
+}
+data("json.json")
+.then((result)=>{
+    console.log(result);
+})
+
+
+//========  we can avoid  "return new Promise" and "then"
+
+
+
+function data(url){
+    // return new Promise( function( resolve , reject){
+    let myRequest = new XMLHttpRequest();
+    myRequest.open("GET" , url )
+    myRequest.send()
+    let res = []
+    myRequest.addEventListener("load",function(){ 
+    if(myRequest.readyState === 4 &&  myRequest.status === 200){
+        console.log(JSON.parse(myRequest.response))
+    }else{
+        console.log("NO Data Found")
+    }
+    // })
+    })
+}
+data("json.json")
+// .then((result)=>{
+//     console.log(result);
+// })
+
+
+
+//========  we can use "fetch"
+
+fetch("json.json")
+.then((res)=>  res.json)
+.then((res)=>{
+  console.log(res);
+})
+
+/* -------------------------------------------------------------------------- */
+/*                                   Promise                                  */
+/* -------------------------------------------------------------------------- */
+
+const myPromise_1 = new Promise((resolve,reject)=>{
+    setTimeout(() => {
+        resolve("frist promise")
+    }, 3000);
+})
+const myPromise_2 = new Promise((resolve,reject)=>{
+    setTimeout(() => {
+        reject("second promise")
+    }, 1000);
+})
+const myPromise_3 = new Promise((resolve,reject)=>{
+    setTimeout(() => {
+        resolve("third promise")
+    }, 2000);
+})
+
+/* ------------------------------- Promise.all ------------------------------ */
+
+//  print array of all promises if all resolve
+//  ['frist promise', 'second promise', 'third promise']
+
+// Promise.all  |::| print  first rejected promise executed
+// second promise
+
+// Promise.all([myPromise_1 , myPromise_2 , myPromise_3])
+// .then(
+//     (resolveValues)=>{
+//         console.log(resolveValues);
+//     },
+//     (rejectedValues)=>{
+//         console.log(rejectedValues);
+//     },
+// )
+
+/* ----------------------------- race.allSettled ---------------------------- */
+
+//  print array of obkects  of all promises and its state ("fulfilled" or "rejected")
+
+// Promise.allSettled([myPromise_1 , myPromise_2 , myPromise_3])
+// .then(
+//         (resolveValues)=>{
+//             console.log(resolveValues);
+//         },
+//         (rejectedValues)=>{
+//             console.log(rejectedValues);
+//         },
+// )
+
+/* ------------------------------ Promise.race ------------------------------ */
+
+//  print the frist Promise executed while was resolve or reject
+
+// Promise.race([myPromise_1 , myPromise_2 , myPromise_3])
+// .then(
+//         (resolveValues)=>{
+//             console.log(resolveValues);
+//         },
+//         (rejectedValues)=>{
+//             console.log(rejectedValues);
+//         },
+// )
+
+
+/* -------------------------------------------------------------------------- */
+/*                                    async                                   */
+/* -------------------------------------------------------------------------- */
+
+async function data(){
+    let days  = ["one","two","three","four"]
+    if(days.length === 4)  // case true
+    {
+        return days
+    }else{
+        return console.error("erooooooooooor");
+    }
+}
+data().then(
+        (resolveValue)=> {
+            console.log("good--1 : " + resolveValue)
+        }
+    )
+
+/* -------------------------------------------------------------------------- */
+/*                                async & await                               */
+/* -------------------------------------------------------------------------- */
+
+// const myPromise_1 = new Promise((resolve,reject)=>{
+//     setTimeout(() => {
+//         resolve("the promise line")
+//     }, 100);
+// })
+
+// function print(){
+//     console.log("line 1");
+//      myPromise_1.then((res)=>console.log(res));
+//     console.log("line 2");
+// }
+// print()
+// // line 1
+// // line 2
+// // the promise line
+
+/* -------------------------------------------------------------------------- */
+
+const myPromise_1 = new Promise((resolve,reject)=>{
+    setTimeout(() => {
+        resolve("the promise line")
+    }, 100);
+})
+
+async function print(){
+    console.log("line 1");
+    await myPromise_1.then((res)=>console.log(res));
+    console.log("line 2");
+}
+print()
+// line 1
+// the promise line
+// line 2
+
+/* -------------------------------- try catch with fetch ------------------------------- */
+async function fetchData(){
+    console.log("Before fetch");
+    try {
+        let data  = await fetch("json.json")
+        let myData = await data.json()
+        console.log(myData);
+         
+    } catch (error) {
+        console.log(error);
+    }finally{
+        console.log("after fetch");
+    }
+}
+fetchData()
+
+
